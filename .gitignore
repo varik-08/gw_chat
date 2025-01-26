@@ -1,0 +1,30 @@
+# Бинарные файлы и кеш Go
+/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Кеш Go modules
+/pkg/
+go.sum
+
+# Кеш Go build
+**/vendor/
+*.a
+
+# Файлы GoLand
+.idea/
+*.iml
+*.ipr
+*.iws
+/out/
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db

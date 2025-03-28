@@ -1,4 +1,6 @@
-# WG_CHAT
+# GW_CHAT
+
+![logo.jpg](web/chat/public/logo.jpg)
 
 ## Технологии
 

@@ -65,3 +65,29 @@ func (r *UserRepository) UpdatePassword(user *User) error {
 
 	return err
 }
+
+func (r *UserRepository) GetUsers() ([]*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := r.db.Query(ctx, `SELECT id, username FROM users`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make([]*User, 0)
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.ID, &user.Username); err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

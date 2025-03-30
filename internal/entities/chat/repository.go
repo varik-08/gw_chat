@@ -22,7 +22,9 @@ func (r *ChatRepository) GetChatsByUserID(userID int) ([]Chat, error) {
 		SELECT c.id, c.name, c.is_public, c.owner_id 
 		FROM chats c
 		JOIN chat_user cu ON c.id = cu.chat_id
-		WHERE cu.user_id = $1`, userID)
+		WHERE cu.user_id = $1
+		ORDER BY c.id DESC
+		`, userID)
 	if err != nil {
 		return nil, err
 	}

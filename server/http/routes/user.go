@@ -11,5 +11,6 @@ func SetupUserRoutes(router *mux.Router, app *config.App) {
 	chatRouter := router.PathPrefix("/users").Subrouter()
 	chatRouter.Use(middlewares.AuthMiddleware(app.Config.SecretKey), middlewares.AppMiddleware(app))
 
+	chatRouter.HandleFunc("", user.GetUsersHandler).Methods("GET")
 	chatRouter.HandleFunc("/change-password", user.UpdatePasswordHandler).Methods("PUT")
 }

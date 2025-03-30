@@ -10,6 +10,7 @@ import (
 
 func CreateChatHandler(w http.ResponseWriter, r *http.Request) {
 	app := controllers.GetAppFromContext(r.Context())
+	currentUser := r.Context().Value("userID").(int)
 
 	var chatDTO chat.ChatDTO
 
@@ -18,6 +19,8 @@ func CreateChatHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+
+	chatDTO.OwnerId = currentUser
 
 	chatID, err := app.Services.ChatService.CreateChat(&chatDTO)
 	if err != nil {

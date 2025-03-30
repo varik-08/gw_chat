@@ -1,6 +1,6 @@
 import {useContext, useEffect, useRef, useState} from "react";
 import {AuthContext} from "../context/AuthContext";
-import {getChatMessages, getChats} from "../api/api";
+import {addMemberToChat, createChat, getChatMessages, getChats, getUsers} from "../api/api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import {Link} from "react-router-dom";
@@ -17,11 +17,18 @@ const Chat = () => {
     const [typingTimeout, setTypingTimeout] = useState(null);
     const [typingUsers, setTypingUsers] = useState({});
     const [shouldScroll, setShouldScroll] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [chatType, setChatType] = useState("private");
+    const [chatName, setChatName] = useState("");
+    const [users, setUsers] = useState([]);
+    const [selectedUsers, setSelectedUsers] = useState([]);
+    const [newChatId, setNewChatId] = useState(null);
 
     useEffect(() => {
         if (!token) return;
 
         loadChats();
+        loadUsers();
 
         const socket = initWS();
 
@@ -50,8 +57,18 @@ const Chat = () => {
         }
     }, [messages]);
 
+    useEffect(() => {
+        if (!newChatId) {
+            return
+        }
+
+        setSelectedChat(chats.find(chat => chat.id === newChatId))
+
+        setNewChatId(null)
+    }, [chats])
+
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
     };
 
     const loadMessages = async (chatID) => {
@@ -96,8 +113,6 @@ const Chat = () => {
                     }, 4000);
                 }
             }
-
-            // добавить обработку события "user_status"
 
             if (message.type === "message") {
                 setMessages((prev) => [...prev, message.message]);
@@ -155,6 +170,46 @@ const Chat = () => {
         }
     };
 
+    const loadUsers = async () => {
+        try {
+            const data = await getUsers(token);
+            setUsers(data.users);
+        } catch (error) {
+            toast.error("Ошибка загрузки пользователей");
+        }
+    };
+
+    const createNewChat = async () => {
+        if (chatType === "private" && selectedUsers.length !== 1) {
+            toast.error("Выберите одного пользователя для личного чата");
+            return;
+        }
+        if (chatType === "group" && selectedUsers.length < 2) {
+            toast.error("Выберите хотя бы двух пользователей для группового чата");
+            return;
+        }
+
+        try {
+            const newChat = await createChat(
+                chatType === "group" ? chatName : `${username} / ${selectedUsers[0].username}`,
+                chatType === "group",
+                token,
+            );
+
+            for (let i = 0; i < selectedUsers.length; i++) {
+                await addMemberToChat(newChat.id, selectedUsers[i].id, token);
+            }
+
+            await loadChats();
+            setShowModal(false);
+            setNewChatId(newChat.id)
+            setSelectedUsers([]);
+            setChatName('')
+        } catch (error) {
+            toast.error("Ошибка создания чата");
+        }
+    };
+
     return (
         <div className="container-fluid vh-100 d-flex flex-column text-white"
              style={{background: "linear-gradient(135deg, #1a1a2e, #16213e)"}}>
@@ -169,7 +224,10 @@ const Chat = () => {
                                  borderRadius: "40%",
                                  boxShadow: "0px 2px 5px rgba(255, 255, 255, 0.2)"
                              }}/>
+
                         <div className="dropdown">
+                            <button className="btn btn-success mx-2" onClick={() => setShowModal(true)}>+ Чат</button>
+
                             <button className="btn btn-secondary dropdown-toggle" type="button" id="menuButton"
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                 ☰
@@ -182,18 +240,24 @@ const Chat = () => {
                     </div>
 
                     <h5 className="text-center mb-3">Чаты</h5>
-                    <ul className="list-group">
+                    <ul
+                        className="list-group"
+                        style={{
+                            maxHeight: "85vh",
+                            overflowY: "auto",
+                        }}
+                    >
                         {chats.map((chat) => (
                             <li
                                 key={chat.id}
                                 className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center 
-                                    ${selectedChat?.id === chat.id ? "active" : ""}`}
+                ${selectedChat?.id === chat.id ? "active" : ""}`}
                                 onClick={() => setSelectedChat(chat)}
                                 style={{
                                     cursor: "pointer",
                                     background: selectedChat?.id === chat.id ? "#17a2b8" : "#393e46",
                                     color: "white",
-                                    border: "none"
+                                    border: "none",
                                 }}
                             >
                                 {chat.name}
@@ -209,7 +273,7 @@ const Chat = () => {
                                  style={{background: "#222831", borderBottom: "2px solid #393e46", height: "70px"}}>
                                 <h5 className="m-0 text-white">{selectedChat.name}</h5>
 
-                                <div className="text-white" style={{ fontSize: "0.9rem", }}>
+                                <div className="text-white" style={{fontSize: "0.9rem",}}>
                                     {Object.values(typingUsers).filter(Boolean).length > 0 && (
                                         <span>{Object.values(typingUsers).filter(Boolean).join(", ")} печатает...</span>
                                     )}
@@ -248,7 +312,7 @@ const Chat = () => {
                                     </div>
                                 ))}
 
-                                <div ref={messagesEndRef} />
+                                <div ref={messagesEndRef}/>
                             </div>
 
                             {/* Поле ввода */}
@@ -280,6 +344,61 @@ const Chat = () => {
                     )}
                 </div>
             </div>
+
+            {showModal && (
+                <div className="modal show d-block" style={{background: "rgba(0,0,0,0.5)"}}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Создать чат</h5>
+                                <button type="button" className="btn-close"
+                                        onClick={() => setShowModal(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                <select className="form-control mb-2" value={chatType}
+                                        onChange={(e) => setChatType(e.target.value)}>
+                                    <option value="private">Личный</option>
+                                    <option value="group">Групповой</option>
+                                </select>
+                                {chatType === "group" &&
+                                    <input type="text" className="form-control mb-2" placeholder="Название чата"
+                                           value={chatName} onChange={(e) => setChatName(e.target.value)}/>}
+                                <div className="mb-2">
+                                    {chatType === "private" ? (
+                                        <select className="form-control"
+                                                onChange={(e) => setSelectedUsers([users.find(user => user.id === Number(e.target.value))])}>
+                                            <option value="">Выберите пользователя</option>
+                                            {users.filter(user => user.id !== userID)
+                                                .map(user => (
+                                                    <option key={user.id} value={user.id}>{user.username}</option>
+                                                ))}
+                                        </select>
+                                    ) : (
+                                        users.filter(user => user.id !== userID)
+                                            .map(user => (
+                                                <div key={user.id} className="form-check">
+                                                    <input className="form-check-input" type="checkbox" value={user.id}
+                                                           onChange={(e) => {
+                                                               if (e.target.checked) {
+                                                                   setSelectedUsers(prev => [...prev, user]);
+                                                               } else {
+                                                                   setSelectedUsers(prev => prev.filter(sUser => sUser.id !== user.id));
+                                                               }
+                                                           }}/>
+                                                    <label
+                                                        className="form-check-label text-black">{user.username}</label>
+                                                </div>
+                                            ))
+                                    )}
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-primary" onClick={createNewChat}>Создать</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

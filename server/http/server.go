@@ -19,7 +19,7 @@ func RunServer(app *config.App) {
 	if app.Config.AppEnv == "production" {
 		allowedOrigins = []string{"https://yourapp.com"}
 	} else {
-		allowedOrigins = []string{"http://localhost:3000", "http://192.168.0.220:3000"}
+		allowedOrigins = []string{"http://localhost:3000", "http://192.168.0.220:3000", "http://172.20.10.2:3000"}
 	}
 
 	handler := cors.New(cors.Options{

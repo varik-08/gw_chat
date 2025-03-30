@@ -53,3 +53,7 @@ func (s *UserService) UpdatePassword(userID int, newPassword string, oldPassword
 
 	return nil
 }
+
+func (s *UserService) GetUsers() ([]*User, error) {
+	return s.UserRepository.GetUsers()
+}

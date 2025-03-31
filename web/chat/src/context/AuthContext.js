@@ -31,6 +31,23 @@ export const AuthProvider = ({children}) => {
         setLoading(false);
     }, []);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const newAccessToken = localStorage.getItem("accessToken");
+            const newRefreshToken = localStorage.getItem("refreshToken");
+            if (newAccessToken !== accessToken) {
+                console.log("Токен изменился в этой вкладке:", newAccessToken);
+                setAccessToken(newAccessToken);
+            }
+            if (newRefreshToken !== refreshToken) {
+                console.log("Refresh токен изменился в этой вкладке:", newRefreshToken);
+                setRefreshToken(newRefreshToken);
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [accessToken, refreshToken]);
+
     const login = (token) => {
         localStorage.setItem("accessToken", token.access_token);
         localStorage.setItem("refreshToken", token.refresh_token);

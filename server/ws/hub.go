@@ -75,7 +75,6 @@ func (h *Hub) BroadcastUserStatus() {
 		ActiveUsers: h.ActiveUsers,
 	}
 
-	// Отправляем статус всем клиентам
 	for client := range h.Clients {
 		client.MessagesChan <- &statusMessage
 	}

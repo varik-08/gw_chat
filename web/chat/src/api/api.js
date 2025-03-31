@@ -1,5 +1,59 @@
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
+const originalFetch = window.fetch;
+
+window.fetch = async (url, options = {}) => {
+    let response = await originalFetch(url, options);
+
+    if (response.status === 401) {
+        console.warn("Токен истек. Обновляем...");
+
+        const newToken = await refreshAccessToken();
+
+        if (!newToken) {
+            console.error("Не удалось обновить токен. Требуется авторизация.");
+            return response;
+        }
+
+        options.headers.Authorization = `Bearer ${newToken}`;
+        response = await originalFetch(url, options);
+    }
+
+    return response;
+};
+
+export const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    if (!refreshToken) {
+        console.error("Нет refresh_token, требуется авторизация.");
+        return null;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/auth/refresh`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Не удалось обновить токен");
+        }
+
+        const data = await response.json();
+        localStorage.setItem("accessToken", data.access_token);
+        localStorage.setItem("refreshToken", data.refresh_token);
+
+        return data.access_token;
+    } catch (error) {
+        console.error("Ошибка при обновлении токена:", error);
+        return null;
+    }
+};
+
 export const login = async (username, password) => {
     const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",

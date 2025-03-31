@@ -54,19 +54,16 @@ func (s *AuthService) Login(credentials users.Credentials) (*Token, error) {
 }
 
 func (s *AuthService) RefreshToken(oldToken *Token) (*Token, error) {
-	// Валидация refresh токена
 	claims, err := jwt.ValidateToken(s.secretKey, oldToken.RefreshToken)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка валидации refresh token: %w", err)
 	}
 
-	// Генерация нового access token
 	newAccessToken, _, err := jwt.GenerateAccessToken(s.secretKey, claims.UserID, claims.Username)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка генерации access token: %w", err)
 	}
 
-	// Генерация нового refresh token
 	newRefreshToken, _, err := jwt.GenerateRefreshToken(s.secretKey, claims.UserID, claims.Username)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка генерации refresh token: %w", err)

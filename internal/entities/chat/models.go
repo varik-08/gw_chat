@@ -14,7 +14,6 @@ type ChatDTO struct {
 	OwnerId  int    `json:"owner_id"`
 }
 
-// ChatMember связывает пользователей с чатами
 type ChatMember struct {
 	ChatID int `json:"chat_id"`
 	UserID int `json:"user_id"`

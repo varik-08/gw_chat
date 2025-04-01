@@ -2,8 +2,9 @@ package auth
 
 import (
 	"encoding/json"
-	"github.com/varik-08/gw_chat/server/http/controllers"
 	"net/http"
+
+	"github.com/varik-08/gw_chat/server/http/controllers"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,10 +29,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"user_id":       token.UserID,
-		"username":      token.Username,
-		"access_token":  token.AccessToken,
-		"refresh_token": token.RefreshToken,
-		"expires_at":    token.ExpiresAt.Format("2006-01-02T15:04:05Z"),
+		"userId":       token.UserID,
+		"username":     token.Username,
+		"accessToken":  token.AccessToken,
+		"refreshToken": token.RefreshToken,
+		"expiresAt":    token.ExpiresAt.Format("2006-01-02T15:04:05Z"),
 	})
 }

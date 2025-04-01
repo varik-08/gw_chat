@@ -2,10 +2,10 @@ package auth
 
 import (
 	"encoding/json"
-	"github.com/varik-08/gw_chat/server/http/controllers"
 	"net/http"
 
 	"github.com/varik-08/gw_chat/internal/entities/auth"
+	"github.com/varik-08/gw_chat/server/http/controllers"
 )
 
 func RefreshHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +28,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"access_token":  newToken.AccessToken,
-		"refresh_token": newToken.RefreshToken,
+		"accessToken":  newToken.AccessToken,
+		"refreshToken": newToken.RefreshToken,
 	})
 }

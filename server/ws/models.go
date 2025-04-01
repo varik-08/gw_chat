@@ -17,10 +17,10 @@ func (m *wsChatMessage) GetType() string {
 
 type wsTypingMessage struct {
 	Type     string `json:"type"`
-	ChatID   int    `json:"chat_id"`
-	UserID   int    `json:"user_id"`
+	ChatID   int    `json:"chatId"`
+	UserID   int    `json:"userId"`
 	UserName string `json:"username"`
-	IsTyping bool   `json:"is_typing"`
+	IsTyping bool   `json:"isTyping"`
 }
 
 func (m *wsTypingMessage) GetType() string {
@@ -29,7 +29,7 @@ func (m *wsTypingMessage) GetType() string {
 
 type wsUserStatusMessage struct {
 	Type        string       `json:"type"`
-	ActiveUsers map[int]bool `json:"active_users"`
+	ActiveUsers map[int]bool `json:"activeUsers"`
 }
 
 func (m *wsUserStatusMessage) GetType() string {

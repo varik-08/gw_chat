@@ -3,23 +3,23 @@ package chat
 type Chat struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
-	IsPublic bool   `json:"is_public"`
-	OwnerId  int    `json:"owner_id"`
+	IsPublic bool   `json:"isPublic"`
+	OwnerID  int    `json:"ownerId"`
 }
 
-type ChatDTO struct {
+type DTO struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
-	IsPublic bool   `json:"is_public"`
-	OwnerId  int    `json:"owner_id"`
+	IsPublic bool   `json:"isPublic"`
+	OwnerID  int    `json:"ownerId"`
 }
 
-type ChatMember struct {
-	ChatID int `json:"chat_id"`
-	UserID int `json:"user_id"`
+type Member struct {
+	ChatID int `json:"chatId"`
+	UserID int `json:"userId"`
 }
 
-type ChatMemberDTO struct {
-	ChatID int `json:"chat_id"`
-	UserID int `json:"user_id"`
+type MemberDTO struct {
+	ChatID int `json:"chatId"`
+	UserID int `json:"userId"`
 }

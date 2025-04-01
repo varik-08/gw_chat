@@ -1,12 +1,13 @@
 package routes
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/varik-08/gw_chat/config"
 	"github.com/varik-08/gw_chat/server/http/middlewares"
 	"github.com/varik-08/gw_chat/server/ws"
-	"log"
-	"net/http"
 )
 
 func SetupWSRoutes(router *mux.Router, app *config.App) {

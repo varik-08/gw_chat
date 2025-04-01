@@ -6,12 +6,13 @@ import (
 
 	"github.com/varik-08/gw_chat/internal/entities/chat"
 	"github.com/varik-08/gw_chat/server/http/controllers"
+	"github.com/varik-08/gw_chat/server/http/middlewares"
 )
 
 func AddMemberHandler(w http.ResponseWriter, r *http.Request) {
 	app := controllers.GetAppFromContext(r.Context())
 
-	var memberDTO chat.ChatMemberDTO
+	var memberDTO chat.MemberDTO
 
 	err := json.NewDecoder(r.Body).Decode(&memberDTO)
 	if err != nil {
@@ -19,7 +20,7 @@ func AddMemberHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentUser := r.Context().Value("userID").(int)
+	currentUser := r.Context().Value(middlewares.UserIDKey).(int)
 
 	err = app.Services.ChatService.AddMember(&memberDTO, currentUser)
 	if err != nil {

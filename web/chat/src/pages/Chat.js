@@ -94,21 +94,21 @@ const Chat = () => {
         socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
 
-            if (userID === message.user_id) {
+            if (userID === message.userId) {
                 return
             }
 
             if (message.type === "typing") {
                 setTypingUsers((prev) => ({
                     ...prev,
-                    [message.user_id]: message.is_typing ? message.username : null
+                    [message.userId]: message.isTyping ? message.username : null
                 }));
 
-                if (message.is_typing) {
+                if (message.isTyping) {
                     setTimeout(() => {
                         setTypingUsers((prev) => ({
                             ...prev,
-                            [message.user_id]: null
+                            [message.userId]: null
                         }));
                     }, 4000);
                 }
@@ -116,7 +116,7 @@ const Chat = () => {
 
             if (message.type === "message") {
                 setMessages((prev) => [...prev, message.message]);
-                if (message.message.user_id !== userID) {
+                if (message.message.userId !== userID) {
                     playNotificationSound();
                 }
             }
@@ -139,7 +139,7 @@ const Chat = () => {
             ws.send(JSON.stringify({
                 type: "message",
                 content: input,
-                chat_id: selectedChat.id,
+                chatId: selectedChat.id,
             }));
             setInput("");
         }
@@ -150,8 +150,8 @@ const Chat = () => {
             // Отправляем событие "typing"
             ws.send(JSON.stringify({
                 type: "typing",
-                chat_id: selectedChat.id,
-                is_typing: true,
+                chatId: selectedChat.id,
+                isTyping: true,
             }));
 
             if (typingTimeout) {
@@ -161,8 +161,8 @@ const Chat = () => {
             const timeout = setTimeout(() => {
                 ws.send(JSON.stringify({
                     type: "typing",
-                    chat_id: selectedChat.id,
-                    is_typing: false,
+                    chatId: selectedChat.id,
+                    isTyping: false,
                 }));
             }, 2000);
 
@@ -284,22 +284,22 @@ const Chat = () => {
                                  style={{height: "85vh", background: "#1a1a2e"}}>
                                 {messages.map((msg, index) => (
                                     <div key={msg.id}>
-                                        {msg.user_id !== userID &&
+                                        {msg.userId !== userID &&
                                             <><strong style={{
                                                 fontSize: "0.9rem",
                                                 fontWeight: "bold",
                                                 color: "#f1f1f1",
                                                 marginBottom: "5px",
-                                                marginLeft: msg.user_id === userID ? "10px" : "0",
+                                                marginLeft: msg.userId === userID ? "10px" : "0",
                                             }}>{msg.username}
                                             </strong><br/></>}
                                         <div key={index}
-                                             className={`d-flex mb-2 ${msg.user_id === userID ? "justify-content-end" : ""}`}>
+                                             className={`d-flex mb-2 ${msg.userId === userID ? "justify-content-end" : ""}`}>
                                             <div
                                                 className={`p-3 rounded`}
                                                 style={{
                                                     maxWidth: "75%",
-                                                    background: msg.user_id === userID ? "#17a2b8" : "#393e46",
+                                                    background: msg.userId === userID ? "#17a2b8" : "#393e46",
                                                     color: "white",
                                                     wordWrap: "break-word",
                                                     borderRadius: "10px",

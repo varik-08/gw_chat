@@ -11,9 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var (
-	pool *pgxpool.Pool
-)
+var pool *pgxpool.Pool
 
 func initDB(dbCfg DB) *pgxpool.Pool {
 	conn, err := newDB(dbCfg)
@@ -31,7 +29,6 @@ func newDB(dbCfg DB) (*pgxpool.Pool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	//nolint
 	connConfig, err := pgx.ParseConfig(
 		fmt.Sprintf(
 			"postgres://%s:%s@%s/%s?TimeZone=Europe/Moscow&search_path=%s",

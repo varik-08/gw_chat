@@ -3,9 +3,9 @@ package auth
 import "time"
 
 type Token struct {
-	UserID       int       `json:"user_id"`
+	UserID       int       `json:"userId"`
 	Username     string    `json:"username"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
-	ExpiresAt    time.Time `json:"expires_at"`
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+	ExpiresAt    time.Time `json:"expiresAt"`
 }

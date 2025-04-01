@@ -9,9 +9,9 @@ import (
 
 type Service struct {
 	UserService    *users.UserService
-	AuthService    *auth.AuthService
-	ChatService    *chat.ChatService
-	MessageService *message.MessageService
+	AuthService    *auth.Service
+	ChatService    *chat.Service
+	MessageService *message.Service
 }
 
 func newService(conf *Cfg, repositories *Repository) *Service {

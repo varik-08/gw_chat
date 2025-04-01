@@ -1,13 +1,13 @@
 package http
 
 import (
-	"github.com/rs/cors"
-	"github.com/varik-08/gw_chat/server/http/routes"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/rs/cors"
 	"github.com/varik-08/gw_chat/config"
+	"github.com/varik-08/gw_chat/server/http/routes"
 )
 
 func RunServer(app *config.App) {

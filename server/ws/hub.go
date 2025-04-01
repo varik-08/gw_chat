@@ -2,9 +2,10 @@ package ws
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/varik-08/gw_chat/config"
 	"github.com/varik-08/gw_chat/internal/entities/message"
-	"sync"
 )
 
 type Hub struct {
@@ -105,7 +106,7 @@ func (h *Hub) BroadcastTyping(wsTypingMessage *wsTypingMessage) {
 }
 
 func (h *Hub) BroadcastMessage(msg *wsChatMessage) {
-	var messageDTO message.MessageDTO
+	var messageDTO message.DTO
 	messageDTO.ChatID = msg.Message.ChatID
 	messageDTO.UserID = msg.Message.UserID
 	messageDTO.Content = msg.Message.Content

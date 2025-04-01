@@ -5,12 +5,13 @@ import (
 	"net/http"
 
 	"github.com/varik-08/gw_chat/server/http/controllers"
+	"github.com/varik-08/gw_chat/server/http/middlewares"
 )
 
 func GetUserChatsHandler(w http.ResponseWriter, r *http.Request) {
 	app := controllers.GetAppFromContext(r.Context())
 
-	currentUser := r.Context().Value("userID").(int)
+	currentUser := r.Context().Value(middlewares.UserIDKey).(int)
 
 	chats, err := app.Services.ChatService.GetChatsByUserID(currentUser)
 	if err != nil {

@@ -9,8 +9,8 @@ import (
 
 type Repository struct {
 	UserRepository    *users.UserRepository
-	ChatRepository    *chat.ChatRepository
-	MessageRepository *message.MessageRepository
+	ChatRepository    *chat.Repository
+	MessageRepository *message.Repository
 }
 
 func newRepository(db *pgxpool.Pool) *Repository {

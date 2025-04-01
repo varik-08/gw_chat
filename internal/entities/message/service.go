@@ -2,22 +2,23 @@ package message
 
 import (
 	"fmt"
+
 	"github.com/varik-08/gw_chat/internal/entities/chat"
 )
 
-type MessageService struct {
-	messageRepository *MessageRepository
-	chatRepository    *chat.ChatRepository
+type Service struct {
+	messageRepository *Repository
+	chatRepository    *chat.Repository
 }
 
-func NewChatService(messageRepository *MessageRepository, chatRepository *chat.ChatRepository) *MessageService {
-	return &MessageService{
+func NewChatService(messageRepository *Repository, chatRepository *chat.Repository) *Service {
+	return &Service{
 		messageRepository: messageRepository,
 		chatRepository:    chatRepository,
 	}
 }
 
-func (s *MessageService) GetMessagesByChatID(chatID int, currentUser int) ([]*Message, error) {
+func (s *Service) GetMessagesByChatID(chatID int, currentUser int) ([]*Message, error) {
 	exists, err := s.chatRepository.CheckExistsUserInChat(currentUser, chatID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check user in chat: %w", err)
@@ -35,7 +36,7 @@ func (s *MessageService) GetMessagesByChatID(chatID int, currentUser int) ([]*Me
 	return messages, nil
 }
 
-func (s *MessageService) CreateChatMessage(messageDTO *MessageDTO) (int, error) {
+func (s *Service) CreateChatMessage(messageDTO *DTO) (int, error) {
 	message := &Message{
 		ChatID:  messageDTO.ChatID,
 		UserID:  messageDTO.UserID,

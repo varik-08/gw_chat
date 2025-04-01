@@ -2,19 +2,20 @@ package chat
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type ChatRepository struct {
+type Repository struct {
 	db *pgxpool.Pool
 }
 
-func NewChatRepository(db *pgxpool.Pool) *ChatRepository {
-	return &ChatRepository{db: db}
+func NewChatRepository(db *pgxpool.Pool) *Repository {
+	return &Repository{db: db}
 }
 
-func (r *ChatRepository) GetChatsByUserID(userID int) ([]Chat, error) {
+func (r *Repository) GetChatsByUserID(userID int) ([]Chat, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -33,7 +34,7 @@ func (r *ChatRepository) GetChatsByUserID(userID int) ([]Chat, error) {
 	var chats []Chat
 	for rows.Next() {
 		var chat Chat
-		if err := rows.Scan(&chat.ID, &chat.Name, &chat.IsPublic, &chat.OwnerId); err != nil {
+		if err := rows.Scan(&chat.ID, &chat.Name, &chat.IsPublic, &chat.OwnerID); err != nil {
 			return nil, err
 		}
 		chats = append(chats, chat)
@@ -46,14 +47,13 @@ func (r *ChatRepository) GetChatsByUserID(userID int) ([]Chat, error) {
 	return chats, nil
 }
 
-func (r *ChatRepository) GetChatByID(chatID int) (*Chat, error) {
+func (r *Repository) GetChatByID(chatID int) (*Chat, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	chat := &Chat{ID: chatID}
 	err := r.db.QueryRow(ctx, "SELECT name, is_public, owner_id FROM chats WHERE id=$1", chatID).
-		Scan(&chat.Name, &chat.IsPublic, &chat.OwnerId)
-
+		Scan(&chat.Name, &chat.IsPublic, &chat.OwnerID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,18 +61,19 @@ func (r *ChatRepository) GetChatByID(chatID int) (*Chat, error) {
 	return chat, nil
 }
 
-func (r *ChatRepository) CheckExistsUserInChat(userID int, chatID int) (bool, error) {
+func (r *Repository) CheckExistsUserInChat(userID int, chatID int) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var exists bool
 
-	err := r.db.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM chat_user WHERE user_id=$1 and chat_id=$2)", userID, chatID).Scan(&exists)
+	err := r.db.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM chat_user WHERE user_id=$1 and chat_id=$2)",
+		userID, chatID).Scan(&exists)
 
 	return exists, err
 }
 
-func (r *ChatRepository) CreateChat(chat *Chat) (int, error) {
+func (r *Repository) CreateChat(chat *Chat) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -80,12 +81,12 @@ func (r *ChatRepository) CreateChat(chat *Chat) (int, error) {
 
 	query := `INSERT INTO chats (name, is_public, owner_id) VALUES ($1, $2, $3) RETURNING id`
 
-	err := r.db.QueryRow(ctx, query, chat.Name, chat.IsPublic, chat.OwnerId).Scan(&chatID)
+	err := r.db.QueryRow(ctx, query, chat.Name, chat.IsPublic, chat.OwnerID).Scan(&chatID)
 
 	return chatID, err
 }
 
-func (r *ChatRepository) AddMember(member *ChatMember) error {
+func (r *Repository) AddMember(member *Member) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -95,7 +96,7 @@ func (r *ChatRepository) AddMember(member *ChatMember) error {
 	return err
 }
 
-func (r *ChatRepository) GetMembersIDsByChatID(chatID int) ([]int, error) {
+func (r *Repository) GetMembersIDsByChatID(chatID int) ([]int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

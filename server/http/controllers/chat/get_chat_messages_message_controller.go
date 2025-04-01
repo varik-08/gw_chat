@@ -2,17 +2,18 @@ package chat
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/varik-08/gw_chat/server/http/controllers"
+	"github.com/varik-08/gw_chat/server/http/middlewares"
 )
 
 func GetChatMessagesHandler(w http.ResponseWriter, r *http.Request) {
 	app := controllers.GetAppFromContext(r.Context())
 
-	currentUser := r.Context().Value("userID").(int)
+	currentUser := r.Context().Value(middlewares.UserIDKey).(int)
 
 	vars := mux.Vars(r)
 	chatIDStr := vars["id"]

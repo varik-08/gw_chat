@@ -13,7 +13,7 @@ export const AuthProvider = ({children}) => {
         const accessToken = localStorage.getItem("accessToken");
         const refreshToken = localStorage.getItem("refreshToken");
         const username = localStorage.getItem("username");
-        const userID = localStorage.getItem("user_id");
+        const userID = localStorage.getItem("userId");
 
         if (accessToken) {
             setAccessToken(accessToken);
@@ -49,21 +49,21 @@ export const AuthProvider = ({children}) => {
     }, [accessToken, refreshToken]);
 
     const login = (token) => {
-        localStorage.setItem("accessToken", token.access_token);
-        localStorage.setItem("refreshToken", token.refresh_token);
-        localStorage.setItem("user_id", token.user_id);
+        localStorage.setItem("accessToken", token.accessToken);
+        localStorage.setItem("refreshToken", token.refreshToken);
+        localStorage.setItem("userId", token.userId);
         localStorage.setItem("username", token.username);
 
-        setAccessToken(token.access_token);
-        setRefreshToken(token.refresh_token);
-        setUserID(token.user_id)
+        setAccessToken(token.accessToken);
+        setRefreshToken(token.refreshToken);
+        setUserID(token.userId)
         setUsername(token.username)
     };
 
     const logout = () => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem("userId");
         localStorage.removeItem("username");
 
         setAccessToken(null);

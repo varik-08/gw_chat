@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -42,7 +43,7 @@ func (c *Client) ReadMessages(hub *Hub) {
 			msg.Message.Username = c.Username
 			msg.Message.UserID = c.UserID
 			msg.Message.Content = rawMsg["content"].(string)
-			msg.Message.ChatID = int(rawMsg["chat_id"].(float64))
+			msg.Message.ChatID = int(rawMsg["chatId"].(float64))
 
 			hub.BroadcastMessage(&msg)
 

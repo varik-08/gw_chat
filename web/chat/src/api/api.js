@@ -26,7 +26,7 @@ export const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem("refreshToken");
 
     if (!refreshToken) {
-        console.error("Нет refresh_token, требуется авторизация.");
+        console.error("Нет refreshToken, требуется авторизация.");
         return null;
     }
 
@@ -36,7 +36,7 @@ export const refreshAccessToken = async () => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ refresh_token: refreshToken }),
+            body: JSON.stringify({ refreshToken: refreshToken }),
         });
 
         if (!response.ok) {
@@ -44,10 +44,10 @@ export const refreshAccessToken = async () => {
         }
 
         const data = await response.json();
-        localStorage.setItem("accessToken", data.access_token);
-        localStorage.setItem("refreshToken", data.refresh_token);
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
 
-        return data.access_token;
+        return data.accessToken;
     } catch (error) {
         console.error("Ошибка при обновлении токена:", error);
         return null;
@@ -158,7 +158,7 @@ export const createChat = async (name, isPublic, token) => {
         },
         body: JSON.stringify({
             name: name,
-            is_public: isPublic,
+            isPublic: isPublic,
         }),
     });
 
@@ -175,8 +175,8 @@ export const addMemberToChat = async (chatID, userID, token) => {
             Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-            chat_id: chatID,
-            user_id: userID,
+            chatId: chatID,
+            userId: userID,
         }),
     });
 

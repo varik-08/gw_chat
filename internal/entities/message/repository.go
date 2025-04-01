@@ -2,19 +2,20 @@ package message
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type MessageRepository struct {
+type Repository struct {
 	db *pgxpool.Pool
 }
 
-func NewMessageRepository(db *pgxpool.Pool) *MessageRepository {
-	return &MessageRepository{db: db}
+func NewMessageRepository(db *pgxpool.Pool) *Repository {
+	return &Repository{db: db}
 }
 
-func (r *MessageRepository) GetMessagesByChatID(chatID int) ([]*Message, error) {
+func (r *Repository) GetMessagesByChatID(chatID int) ([]*Message, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -34,7 +35,8 @@ ORDER BY m.created_at
 	messages := make([]*Message, 0)
 	for rows.Next() {
 		var message Message
-		if err := rows.Scan(&message.ID, &message.ChatID, &message.UserID, &message.Content, &message.CreatedAt, &message.Username); err != nil {
+		if err := rows.Scan(&message.ID, &message.ChatID, &message.UserID,
+			&message.Content, &message.CreatedAt, &message.Username); err != nil {
 			return nil, err
 		}
 		messages = append(messages, &message)
@@ -47,7 +49,7 @@ ORDER BY m.created_at
 	return messages, nil
 }
 
-func (r *MessageRepository) CreateChatMessage(message *Message) (int, error) {
+func (r *Repository) CreateChatMessage(message *Message) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

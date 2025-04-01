@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/varik-08/gw_chat/server/http"
 	"log"
 
 	"github.com/varik-08/gw_chat/config"
+	"github.com/varik-08/gw_chat/server/http"
 )
 
 func main() {

@@ -2,10 +2,10 @@ package auth
 
 import (
 	"encoding/json"
-	"github.com/varik-08/gw_chat/server/http/controllers"
 	"net/http"
 
 	"github.com/varik-08/gw_chat/internal/entities/users"
+	"github.com/varik-08/gw_chat/server/http/controllers"
 )
 
 func RegistrationHandler(w http.ResponseWriter, r *http.Request) {

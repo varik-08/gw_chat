@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/varik-08/gw_chat/server/http/controllers"
+	"github.com/varik-08/gw_chat/server/http/middlewares"
 )
 
 type ChangePasswordRequest struct {
@@ -23,7 +24,7 @@ func UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentUser := r.Context().Value("userID").(int)
+	currentUser := r.Context().Value(middlewares.UserIDKey).(int)
 
 	err = app.Services.UserService.UpdatePassword(currentUser, req.NewPassword, req.OldPassword)
 	if err != nil {

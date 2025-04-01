@@ -2,24 +2,25 @@ package auth
 
 import (
 	"fmt"
+
 	"github.com/varik-08/gw_chat/internal/entities/users"
 	"github.com/varik-08/gw_chat/pkg"
 	"github.com/varik-08/gw_chat/pkg/jwt"
 )
 
-type AuthService struct {
+type Service struct {
 	UserRepository *users.UserRepository
 	secretKey      string
 }
 
-func NewAuthService(secretKey string, userRepository *users.UserRepository) *AuthService {
-	return &AuthService{
+func NewAuthService(secretKey string, userRepository *users.UserRepository) *Service {
+	return &Service{
 		secretKey:      secretKey,
 		UserRepository: userRepository,
 	}
 }
 
-func (s *AuthService) Login(credentials users.Credentials) (*Token, error) {
+func (s *Service) Login(credentials users.Credentials) (*Token, error) {
 	user, err := s.UserRepository.GetUserByUsername(credentials.Username)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения пользователя")
@@ -53,7 +54,7 @@ func (s *AuthService) Login(credentials users.Credentials) (*Token, error) {
 	return &token, nil
 }
 
-func (s *AuthService) RefreshToken(oldToken *Token) (*Token, error) {
+func (s *Service) RefreshToken(oldToken *Token) (*Token, error) {
 	claims, err := jwt.ValidateToken(s.secretKey, oldToken.RefreshToken)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка валидации refresh token: %w", err)

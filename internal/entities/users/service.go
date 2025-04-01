@@ -2,6 +2,7 @@ package users
 
 import (
 	"fmt"
+
 	"github.com/varik-08/gw_chat/pkg"
 )
 
@@ -24,13 +25,13 @@ func (s *UserService) CreateUser(credentials Credentials) (int, error) {
 		PasswordHash: hashedPassword,
 	}
 
-	userId, err := s.UserRepository.CreateUser(&user)
+	userID, err := s.UserRepository.CreateUser(&user)
 
-	return userId, err
+	return userID, err
 }
 
 func (s *UserService) UpdatePassword(userID int, newPassword string, oldPassword string) error {
-	user, err := s.UserRepository.GetUserById(userID)
+	user, err := s.UserRepository.GetUserByID(userID)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}

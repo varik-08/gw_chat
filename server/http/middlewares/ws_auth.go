@@ -22,8 +22,8 @@ func WsAuthMiddleware(secretKey string) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), "userID", claims.UserID)
-			ctx = context.WithValue(ctx, "username", claims.Username)
+			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+			ctx = context.WithValue(ctx, UsernameKey, claims.Username)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

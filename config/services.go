@@ -22,6 +22,6 @@ func newService(conf *Cfg, repositories *Repository) *Service {
 			repositories.UserRepository,
 		),
 		ChatService:    chat.NewChatService(repositories.ChatRepository),
-		MessageService: message.NewChatService(repositories.MessageRepository, repositories.ChatRepository),
+		MessageService: message.NewMessageService(repositories.MessageRepository, repositories.ChatRepository),
 	}
 }

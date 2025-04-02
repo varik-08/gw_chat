@@ -7,6 +7,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type UserRepositoryInterface interface {
+	GetUserByUsername(username string) (*User, error)
+	CreateUser(user *User) (int, error)
+	GetUserByID(id int) (*User, error)
+	UpdatePassword(user *User) error
+	GetUsers() ([]*User, error)
+}
+
 type UserRepository struct {
 	db *pgxpool.Pool
 }

@@ -7,6 +7,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type RepositoryInterface interface {
+	GetMessagesByChatID(chatID int) ([]*Message, error)
+	CreateChatMessage(message *Message) (int, error)
+}
+
 type Repository struct {
 	db *pgxpool.Pool
 }

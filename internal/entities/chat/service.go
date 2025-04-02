@@ -3,10 +3,10 @@ package chat
 import "fmt"
 
 type Service struct {
-	chatRepository *Repository
+	chatRepository RepositoryInterface
 }
 
-func NewChatService(chatRepository *Repository) *Service {
+func NewChatService(chatRepository RepositoryInterface) *Service {
 	return &Service{chatRepository: chatRepository}
 }
 

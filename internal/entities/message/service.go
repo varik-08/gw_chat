@@ -7,11 +7,11 @@ import (
 )
 
 type Service struct {
-	messageRepository *Repository
-	chatRepository    *chat.Repository
+	messageRepository RepositoryInterface
+	chatRepository    chat.RepositoryInterface
 }
 
-func NewChatService(messageRepository *Repository, chatRepository *chat.Repository) *Service {
+func NewMessageService(messageRepository RepositoryInterface, chatRepository chat.RepositoryInterface) *Service {
 	return &Service{
 		messageRepository: messageRepository,
 		chatRepository:    chatRepository,

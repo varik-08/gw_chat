@@ -9,11 +9,11 @@ import (
 )
 
 type Service struct {
-	UserRepository *users.UserRepository
+	UserRepository users.UserRepositoryInterface
 	secretKey      string
 }
 
-func NewAuthService(secretKey string, userRepository *users.UserRepository) *Service {
+func NewAuthService(secretKey string, userRepository users.UserRepositoryInterface) *Service {
 	return &Service{
 		secretKey:      secretKey,
 		UserRepository: userRepository,

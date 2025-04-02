@@ -1,0 +1,33 @@
+services:
+  app-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  app-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile-web
+    ports:
+      - "8000:80"
+    depends_on:
+      - app-backend
+
+  db:
+    image: postgres:17-alpine
+    container_name: wg_chat_db
+    environment:
+      POSTGRES_DB: ${APP_DB_DATABASE}
+      POSTGRES_USER: ${APP_DB_USER}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
+    ports:
+      - ${APP_DB_PORT}:${APP_DB_PORT}
+    command: ["postgres", "-c", "port=${APP_DB_PORT}"]
+    volumes:
+      - ./docker_data/db_data:/var/lib/postgresql/data
+

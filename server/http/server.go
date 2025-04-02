@@ -15,15 +15,8 @@ func RunServer(app *config.App) {
 
 	mux := routes.SetupRoutes(app)
 
-	var allowedOrigins []string
-	if app.Config.AppEnv == "production" {
-		allowedOrigins = []string{"https://yourapp.com"}
-	} else {
-		allowedOrigins = []string{"http://localhost:3000", "http://192.168.0.220:3000", "http://172.20.10.2:3000"}
-	}
-
 	handler := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,

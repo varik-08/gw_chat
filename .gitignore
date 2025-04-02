@@ -28,6 +28,6 @@ go.sum
 *.swp
 .DS_Store
 Thumbs.db
-docker/db_data
+docker_data/db_data
 
 .env

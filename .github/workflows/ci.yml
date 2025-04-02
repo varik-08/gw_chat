@@ -40,22 +40,22 @@ jobs:
           go-version: '1.24'
 
       - name: Run tests
-        run: go test -race -count 100 ./...
+        run: go test -race -count 1 ./...
 
-#  build:
-#    name: Build
-#    needs: test
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#
-#      - name: Set up Go
-#        uses: actions/setup-go@v5
-#        with:
-#          go-version: '1.24'
-#
-#      - name: Build binary
-#        run: |
-#          mkdir -p ./bin
-#          go build -o ./bin/service .
+  build:
+    name: Build
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Build binary
+        run: |
+          mkdir -p ./bin
+          go build -o ./bin/server ./cmd/app/main.go

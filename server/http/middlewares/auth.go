@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/varik-08/gw_chat/pkg/jwt"
+	"github.com/varik-08/gw_chat/internal/pkg/jwt"
 )
 
 const UserIDKey ContextKey = "userID"

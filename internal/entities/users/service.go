@@ -3,7 +3,7 @@ package users
 import (
 	"fmt"
 
-	"github.com/varik-08/gw_chat/pkg"
+	"github.com/varik-08/gw_chat/internal/pkg"
 )
 
 type UserService struct {

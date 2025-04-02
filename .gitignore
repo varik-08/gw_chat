@@ -7,10 +7,6 @@
 *.test
 *.out
 
-# Кеш Go modules
-/pkg/
-go.sum
-
 # Кеш Go build
 **/vendor/
 *.a

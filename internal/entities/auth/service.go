@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/varik-08/gw_chat/internal/entities/users"
-	"github.com/varik-08/gw_chat/pkg"
-	"github.com/varik-08/gw_chat/pkg/jwt"
+	"github.com/varik-08/gw_chat/internal/pkg"
+	"github.com/varik-08/gw_chat/internal/pkg/jwt"
 )
 
 type Service struct {

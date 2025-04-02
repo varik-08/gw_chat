@@ -26,6 +26,26 @@
 
 ## Развертывание
 Развертывание сервиса должно осуществляться с использованием docker compose в директории с проектом.
-- `cp .env.example .env`
-- `docker-compose up -d`
+- `cp .env.example .env` - копирование файла .env.example в .env
+- `docker-compose up -d` - запуск сервиса
+- `docker cp db/schema.sql <container_name>:/path/in/container/schema.sql` - копирование скрипта создания базы данных в контейнер
+- `docker exec -i <container_name> psql -U <username> -d <database_name> -f /path/in/container/schema.sql` - выполнение скрипта создания базы данных в контейнере
 
+## Экраны приложения
+<div style="display: flex; flex-wrap: wrap;">
+  <div style="margin: 10px;">
+    <img src="docs/images/login.png" alt="Вход" width="300" />
+  </div>
+  <div style="margin: 10px;">
+    <img src="docs/images/chat_list.png" alt="Список чатов" width="300" />
+  </div>
+<div style="margin: 10px;">
+    <img src="docs/images/create_chat.png" alt="Создание чата" width="300" />
+  </div>
+<div style="margin: 10px;">
+    <img src="docs/images/text.png" alt="Переписка" width="300" />
+  </div>
+  <div style="margin: 10px;">
+    <img src="docs/images/profile.png" alt="Страница профиля" width="300" />
+  </div>
+</div>

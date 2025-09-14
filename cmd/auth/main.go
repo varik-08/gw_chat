@@ -87,6 +87,7 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/.well-known/jwks.json", jwks.Handler())
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 	httpSrv := &http.Server{
 		Addr:              net.JoinHostPort(cfg.HTTP.Host, cfg.HTTP.Port),
 		Handler:           mux,

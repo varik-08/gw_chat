@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -77,6 +78,13 @@ func main() {
 	services := conf.NewService(cfg, repos)
 
 	prod := mqk.NewProducer(cfg.Kafka.Brokers, "message-service")
+
+	// healthz HTTP
+	go func() {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+		_ = http.ListenAndServe(":9101-health", mux)
+	}()
 
 	lis, err := net.Listen("tcp", ":9101")
 	if err != nil {

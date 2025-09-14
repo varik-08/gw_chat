@@ -4,6 +4,7 @@ import (
     "context"
     "log"
     "net"
+    "net/http"
 
     "google.golang.org/grpc"
 
@@ -67,6 +68,13 @@ func main() {
     _ = conf.InitDB(cfg.DB)
     repos := conf.NewRepository()
     services := conf.NewService(cfg, repos)
+
+    // healthz HTTP
+    go func() {
+        mux := http.NewServeMux()
+        mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+        _ = http.ListenAndServe(":9100-health", mux)
+    }()
 
     lis, err := net.Listen("tcp", ":9100")
     if err != nil {

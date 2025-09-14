@@ -97,6 +97,7 @@ func main() {
 	// Wire domain service
 	repos := conf.NewRepository()
 	services := conf.NewService(cfg, repos)
+	services.AuthService = auth.NewAuthServiceRS256(priv, kid, repos.UserRepository)
 
 	// gRPC server
 	grpcLis, err := net.Listen("tcp", ":9099")

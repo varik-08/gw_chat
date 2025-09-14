@@ -60,9 +60,9 @@ func (r *Repository) CreateChatMessage(message *Message) (int, error) {
 
 	var messageID int
 
-	query := `INSERT INTO messages (chat_id, user_id, text) VALUES ($1, $2, $3) RETURNING id`
+	query := `INSERT INTO messages (chat_id, user_id, text, client_message_id, saga_id) VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
-	err := r.db.QueryRow(ctx, query, message.ChatID, message.UserID, message.Content).Scan(&messageID)
+	err := r.db.QueryRow(ctx, query, message.ChatID, message.UserID, message.Content, message.ClientMsgID, message.SagaID).Scan(&messageID)
 
 	return messageID, err
 }

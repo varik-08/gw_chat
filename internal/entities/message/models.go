@@ -9,6 +9,8 @@ type Message struct {
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"createdAt"`
 	Username  string    `json:"username"`
+	ClientMsgID string  `json:"clientMessageId"`
+	SagaID      string  `json:"sagaId"`
 }
 
 type DTO struct {
@@ -18,4 +20,6 @@ type DTO struct {
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"createdAt"`
 	Username  string    `json:"username"`
+	ClientMsgID string  `json:"clientMessageId"`
+	SagaID      string  `json:"sagaId"`
 }

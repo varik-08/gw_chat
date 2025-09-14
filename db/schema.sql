@@ -22,11 +22,13 @@ CREATE TABLE chat_user
 
 CREATE TABLE messages
 (
-    id         SERIAL PRIMARY KEY,
-    chat_id    INT REFERENCES chats (id) NOT NULL,
-    user_id    INT REFERENCES users (id) NOT NULL ,
-    text       TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id                 SERIAL PRIMARY KEY,
+    chat_id            INT REFERENCES chats (id) NOT NULL,
+    user_id            INT REFERENCES users (id) NOT NULL ,
+    text               TEXT NOT NULL,
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    client_message_id  TEXT UNIQUE,
+    saga_id            TEXT UNIQUE
 );
 
 -- Outbox для сообщений

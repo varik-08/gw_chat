@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	"google.golang.org/grpc"
@@ -25,22 +23,10 @@ type messageServer struct {
 }
 
 func (s *messageServer) CreateMessage(ctx context.Context, req *messagev1.CreateMessageRequest) (*messagev1.CreateMessageResponse, error) {
-	id, err := s.domain.CreateChatMessage(&message.DTO{ChatID: int(req.GetChatId()), UserID: int(req.GetSenderId()), Content: req.GetText()})
+	id, err := s.domain.CreateChatMessage(&message.DTO{ChatID: int(req.GetChatId()), UserID: int(req.GetSenderId()), Content: req.GetText(), ClientMsgID: req.GetClientMessageId(), SagaID: req.GetSagaId()})
 	if err != nil {
 		return nil, err
 	}
-	// Publish evt.message.posted (немедленно; дублируется outbox'ом — допускаем для демо)
-	evt := map[string]any{
-		"msg_type":  "evt.message.posted",
-		"chat_id":   req.GetChatId(),
-		"message_id": id,
-		"sender_id": req.GetSenderId(),
-		"text":      req.GetText(),
-		"ts":        time.Now().Unix(),
-	}
-	b, _ := json.Marshal(evt)
-	_ = s.producer.Publish(ctx, "evt.message.posted", []byte(strconv.FormatInt(req.GetChatId(), 10)), b, map[string]string{"msg_type": "evt.message.posted"})
-
 	return &messagev1.CreateMessageResponse{MessageId: int64(id), CreatedUnix: time.Now().Unix()}, nil
 }
 

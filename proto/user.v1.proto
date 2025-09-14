@@ -20,5 +20,9 @@ service UserService {
   rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
   rpc GetUserByID(GetUserByIDRequest) returns (GetUserByIDResponse);
   rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
 }
+
+message CreateUserRequest { string username = 1; string password = 2; }
+message CreateUserResponse { int64 id = 1; }
 

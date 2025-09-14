@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 
 	conf "github.com/varik-08/gw_chat/config"
@@ -88,6 +89,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/.well-known/jwks.json", jwks.Handler())
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	mux.Handle("/metrics", promhttp.Handler())
 	httpSrv := &http.Server{
 		Addr:              net.JoinHostPort(cfg.HTTP.Host, cfg.HTTP.Port),
 		Handler:           mux,

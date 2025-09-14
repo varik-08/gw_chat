@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 
 	conf "github.com/varik-08/gw_chat/config"
@@ -65,10 +66,12 @@ func main() {
 
 	prod := mqk.NewProducer(cfg.Kafka.Brokers, "message-service")
 
-	// healthz HTTP
+	// healthz/readyz/metrics HTTP
 	go func() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+		mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+		mux.Handle("/metrics", promhttp.Handler())
 		_ = http.ListenAndServe(":9101-health", mux)
 	}()
 

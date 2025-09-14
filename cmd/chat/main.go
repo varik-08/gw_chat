@@ -6,6 +6,7 @@ import (
     "net"
     "net/http"
 
+    "github.com/prometheus/client_golang/prometheus/promhttp"
     "google.golang.org/grpc"
 
     conf "github.com/varik-08/gw_chat/config"
@@ -69,10 +70,12 @@ func main() {
     repos := conf.NewRepository()
     services := conf.NewService(cfg, repos)
 
-    // healthz HTTP
+    // healthz/readyz/metrics HTTP
     go func() {
         mux := http.NewServeMux()
         mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+        mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+        mux.Handle("/metrics", promhttp.Handler())
         _ = http.ListenAndServe(":9100-health", mux)
     }()
 

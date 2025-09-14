@@ -6,6 +6,7 @@ import (
     "net"
     "net/http"
 
+    "github.com/prometheus/client_golang/prometheus/promhttp"
     "google.golang.org/grpc"
 
     conf "github.com/varik-08/gw_chat/config"
@@ -38,6 +39,12 @@ func (s *userServer) UpdatePassword(ctx context.Context, req *userv1.UpdatePassw
     return &userv1.UpdatePasswordResponse{}, nil
 }
 
+func (s *userServer) CreateUser(ctx context.Context, req *userv1.CreateUserRequest) (*userv1.CreateUserResponse, error) {
+    id, err := s.domain.CreateUser(users.Credentials{Username: req.GetUsername(), Password: req.GetPassword()})
+    if err != nil { return nil, err }
+    return &userv1.CreateUserResponse{Id: int64(id)}, nil
+}
+
 func main() {
     cfg, err := conf.GetConfig()
     if err != nil { log.Fatalf("config: %v", err) }
@@ -49,10 +56,12 @@ func main() {
     repos := conf.NewRepository()
     services := conf.NewService(cfg, repos)
 
-    // healthz HTTP
+    // health/metrics
     go func() {
         mux := http.NewServeMux()
         mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+        mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+        mux.Handle("/metrics", promhttp.Handler())
         _ = http.ListenAndServe(":9102-health", mux)
     }()
 

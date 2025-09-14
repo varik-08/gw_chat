@@ -66,7 +66,13 @@ func main() {
 	// RSA keys (for demo: generate on startup or load from files)
 	var priv *rsa.PrivateKey
 	var kid = "auth-key-1"
-	if pem := os.Getenv("AUTH_RSA_PRIVATE_PEM"); pem != "" {
+	if pemFile := os.Getenv("AUTH_RSA_PRIVATE_PEM_FILE"); pemFile != "" {
+		b, err := os.ReadFile(pemFile)
+		if err != nil { log.Fatalf("read AUTH_RSA_PRIVATE_PEM_FILE: %v", err) }
+		p, err := jwtrs.ParseRSAPrivateKeyPEM(b)
+		if err != nil { log.Fatalf("invalid AUTH_RSA_PRIVATE_PEM_FILE: %v", err) }
+		priv = p
+	} else if pem := os.Getenv("AUTH_RSA_PRIVATE_PEM"); pem != "" {
 		p, err := jwtrs.ParseRSAPrivateKeyPEM([]byte(pem))
 		if err != nil {
 			log.Fatalf("invalid AUTH_RSA_PRIVATE_PEM: %v", err)

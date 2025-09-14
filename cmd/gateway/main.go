@@ -21,6 +21,7 @@ import (
 	chatv1 "github.com/varik-08/gw_chat/internal/grpc/gen/chatv1"
 	messagev1 "github.com/varik-08/gw_chat/internal/grpc/gen/messagev1"
 	userv1 "github.com/varik-08/gw_chat/internal/grpc/gen/userv1"
+	"github.com/rs/cors"
 	mqk "github.com/varik-08/gw_chat/internal/mq/kafka"
 	otelinit "github.com/varik-08/gw_chat/internal/otel"
 	jwtrs "github.com/varik-08/gw_chat/internal/security/jwt"
@@ -165,7 +166,9 @@ func main() {
 		isTyping := r.URL.Query().Get("typing") == "1"
 		key := []byte(chatID)
 		value := []byte(`{"msg_type":"evt.chat.typing","chat_id":` + chatID + `,"user_id":` + strconv.FormatInt(claims.UserID, 10) + `,"is_typing":` + strconv.FormatBool(isTyping) + `}`)
-		_ = prod.Publish(r.Context(), "evt.chat.typing", key, value, map[string]string{"msg_type": "evt.chat.typing"})
+		headers := map[string]string{"msg_type": "evt.chat.typing"}
+		if tp := r.Header.Get("traceparent"); tp != "" { headers["traceparent"] = tp }
+		_ = prod.Publish(r.Context(), "evt.chat.typing", key, value, headers)
 		w.WriteHeader(http.StatusAccepted)
 	}).Methods("POST")
 
@@ -202,6 +205,17 @@ func main() {
 		defer cancel()
 		resp, err := authCli.Login(ctxReq, &authv1.LoginRequest{Username: in.Username, Password: in.Password})
 		if err != nil { http.Error(w, err.Error(), http.StatusUnauthorized); return }
+		_ = json.NewEncoder(w).Encode(resp)
+	}).Methods("POST")
+	// REST: Register user
+	r.HandleFunc("/api/users/register", func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		var in struct{ Username, Password string }
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil { http.Error(w, "bad json", http.StatusBadRequest); return }
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := userCli.CreateUser(ctxReq, &userv1.CreateUserRequest{Username: in.Username, Password: in.Password})
+		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	}).Methods("POST")
 	r.HandleFunc("/api/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
@@ -311,9 +325,25 @@ func main() {
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("POST")
 
+	// CORS + basic rate limiting
+	corsMw := cors.New(cors.Options{AllowedOrigins: []string{"*"}, AllowedMethods: []string{"GET","POST","PUT","DELETE","OPTIONS"}, AllowedHeaders: []string{"*"}})
+	var mu sync.Mutex
+	last := map[string]time.Time{}
+	rateLimit := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ip := r.RemoteAddr
+			mu.Lock()
+			prev := last[ip]
+			if time.Since(prev) < 50*time.Millisecond { mu.Unlock(); http.Error(w, "rate limit", http.StatusTooManyRequests); return }
+			last[ip] = time.Now()
+			mu.Unlock()
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	srv := &http.Server{
 		Addr:              ":8080",
-		Handler:           r,
+		Handler:           rateLimit(corsMw.Handler(r)),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,

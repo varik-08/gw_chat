@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package chat.v1;
+
+option go_package = "internal/grpc/gen/chatv1;chatv1";
+
+message CreateChatRequest {
+  string title = 1;
+  bool is_public = 2;
+  repeated int64 member_ids = 3;
+}
+
+message CreateChatResponse {
+  int64 chat_id = 1;
+}
+
+message AddMembersRequest {
+  int64 chat_id = 1;
+  repeated int64 member_ids = 2;
+}
+
+message AddMembersResponse {
+  int64 chat_id = 1;
+  int32 added_count = 2;
+}
+
+message GetUserChatsRequest {
+  int64 user_id = 1;
+}
+
+message Chat {
+  int64 id = 1;
+  string title = 2;
+  bool is_public = 3;
+}
+
+message GetUserChatsResponse {
+  repeated Chat chats = 1;
+}
+
+message GetMembersIDsByChatIDRequest {
+  int64 chat_id = 1;
+}
+
+message GetMembersIDsByChatIDResponse {
+  repeated int64 member_ids = 1;
+}
+
+service ChatService {
+  rpc CreateChat(CreateChatRequest) returns (CreateChatResponse);
+  rpc AddMembers(AddMembersRequest) returns (AddMembersResponse);
+  rpc GetUserChats(GetUserChatsRequest) returns (GetUserChatsResponse);
+  rpc GetMembersIDsByChatID(GetMembersIDsByChatIDRequest) returns (GetMembersIDsByChatIDResponse);
+}
+

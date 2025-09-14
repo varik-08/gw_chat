@@ -19,4 +19,20 @@ type Cfg struct {
 	HTTP      HTTP   `envPrefix:"HTTP_"`
 	DB        DB     `envPrefix:"DB_"`
 	SecretKey string `env:"SECRET_KEY"`
+	Kafka     Kafka   `envPrefix:"KAFKA_"`
+	OTEL      OTEL    `envPrefix:"OTEL_"`
+	Features  Features `envPrefix:"FEATURE_"`
+}
+
+type Kafka struct {
+	Brokers []string `env:"BROKERS" envSeparator:"," envDefault:"kafka:9092"`
+}
+
+type OTEL struct {
+	ExporterOTLPEndpoint string `env:"EXPORTER_OTLP_ENDPOINT" envDefault:"jaeger:4317"`
+}
+
+type Features struct {
+	EnableSaga   bool `env:"ENABLE_SAGA" envDefault:"false"`
+	EnableOutbox bool `env:"ENABLE_OUTBOX" envDefault:"false"`
 }

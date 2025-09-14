@@ -34,7 +34,7 @@ func initApp() (*App, error) {
 		return nil, err
 	}
 
-	db := initDB(conf.DB)
+	db := InitDB(conf.DB)
 
 	repos := newRepository(db)
 	services := newService(conf, repos)

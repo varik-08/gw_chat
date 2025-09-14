@@ -20,3 +20,6 @@ func newRepository(db *pgxpool.Pool) *Repository {
 		MessageRepository: message.NewMessageRepository(db),
 	}
 }
+
+// NewRepository — экспортируемая обёртка
+func NewRepository() *Repository { return newRepository(pool) }

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package message.v1;
+
+option go_package = "internal/grpc/gen/messagev1;messagev1";
+
+message CreateMessageRequest {
+  int64 chat_id = 1;
+  int64 sender_id = 2;
+  string text = 3;
+  string client_message_id = 4; // UUID от клиента
+  string saga_id = 5; // UUID от оркестратора при необходимости
+}
+
+message CreateMessageResponse {
+  int64 message_id = 1;
+  int64 created_unix = 2;
+}
+
+message GetMessagesByChatIDRequest {
+  int64 chat_id = 1;
+  int32 limit = 2;
+  int64 after_message_id = 3;
+}
+
+message MessageItem {
+  int64 id = 1;
+  int64 chat_id = 2;
+  int64 sender_id = 3;
+  string text = 4;
+  int64 created_unix = 5;
+}
+
+message GetMessagesByChatIDResponse {
+  repeated MessageItem messages = 1;
+}
+
+service MessageService {
+  rpc CreateMessage(CreateMessageRequest) returns (CreateMessageResponse);
+  rpc GetMessagesByChatID(GetMessagesByChatIDRequest) returns (GetMessagesByChatIDResponse);
+}
+

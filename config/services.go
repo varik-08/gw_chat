@@ -25,3 +25,6 @@ func newService(conf *Cfg, repositories *Repository) *Service {
 		MessageService: message.NewMessageService(repositories.MessageRepository, repositories.ChatRepository),
 	}
 }
+
+// NewService — экспортируемая обёртка
+func NewService(conf *Cfg, repositories *Repository) *Service { return newService(conf, repositories) }

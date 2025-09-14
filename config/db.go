@@ -13,7 +13,7 @@ import (
 
 var pool *pgxpool.Pool
 
-func initDB(dbCfg DB) *pgxpool.Pool {
+func InitDB(dbCfg DB) *pgxpool.Pool {
 	conn, err := newDB(dbCfg)
 	if err != nil {
 		log.Fatalf("Ошибка инициализации БД: %v", err)

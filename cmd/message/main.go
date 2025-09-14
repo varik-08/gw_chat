@@ -29,7 +29,7 @@ func (s *messageServer) CreateMessage(ctx context.Context, req *messagev1.Create
 	if err != nil {
 		return nil, err
 	}
-	// Publish evt.message.posted
+	// Publish evt.message.posted (немедленно; дублируется outbox'ом — допускаем для демо)
 	evt := map[string]any{
 		"msg_type":  "evt.message.posted",
 		"chat_id":   req.GetChatId(),
@@ -73,7 +73,7 @@ func main() {
 	}
 	defer func() { _ = shutdown(context.Background()) }()
 
-	_ = conf.InitDB(cfg.DB)
+	db := conf.InitDB(cfg.DB)
 	repos := conf.NewRepository()
 	services := conf.NewService(cfg, repos)
 
@@ -84,6 +84,12 @@ func main() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 		_ = http.ListenAndServe(":9101-health", mux)
+	}()
+
+	// outbox worker
+	go func() {
+		pub := message.NewOutboxPublisher(db, prod)
+		_ = pub.Run(context.Background())
 	}()
 
 	lis, err := net.Listen("tcp", ":9101")

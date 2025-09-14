@@ -29,6 +29,37 @@ CREATE TABLE messages
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Outbox для сообщений
+CREATE TABLE IF NOT EXISTS message_outbox (
+    id              BIGSERIAL PRIMARY KEY,
+    message_id      INT UNIQUE REFERENCES messages (id),
+    payload         JSONB NOT NULL,
+    published_at    TIMESTAMP NULL,
+    attempts        INT NOT NULL DEFAULT 0,
+    next_attempt_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION trg_messages_after_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO message_outbox (message_id, payload)
+    VALUES (NEW.id, jsonb_build_object(
+        'msg_type', 'evt.message.posted',
+        'message_id', NEW.id,
+        'chat_id', NEW.chat_id,
+        'sender_id', NEW.user_id,
+        'text', NEW.text,
+        'created_unix', EXTRACT(EPOCH FROM NEW.created_at)
+    ));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS messages_after_insert ON messages;
+CREATE TRIGGER messages_after_insert
+AFTER INSERT ON messages
+FOR EACH ROW EXECUTE PROCEDURE trg_messages_after_insert();
+
 -- Saga orchestrator storage
 CREATE TABLE IF NOT EXISTS saga_instances (
     id           BIGSERIAL PRIMARY KEY,

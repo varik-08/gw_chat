@@ -1,0 +1,23 @@
+FROM golang:1.24 as builder
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Сборка всех сервисов
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/auth ./cmd/auth && \
+    CGO_ENABLED=0 GOOS=linux go build -o /out/user ./cmd/user && \
+    CGO_ENABLED=0 GOOS=linux go build -o /out/chat ./cmd/chat && \
+    CGO_ENABLED=0 GOOS=linux go build -o /out/message ./cmd/message && \
+    CGO_ENABLED=0 GOOS=linux go build -o /out/gateway ./cmd/gateway && \
+    CGO_ENABLED=0 GOOS=linux go build -o /out/orchestrator ./cmd/orchestrator
+
+FROM gcr.io/distroless/base-debian12
+WORKDIR /app
+COPY --from=builder /out/* /app/
+ENV TZ=UTC
+EXPOSE 8080 9099 9100 9101 9102
+CMD ["/app/gateway"]

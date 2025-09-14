@@ -13,7 +13,8 @@ type Handler func(ctx context.Context, msg kgo.Message) error
 
 // Consumer инкапсулирует чтение из Kafka c коммитом оффсетов при успехе.
 type Consumer struct {
-    reader *kgo.Reader
+    reader  *kgo.Reader
+    brokers []string
 }
 
 // NewConsumer создаёт консьюмера группы.
@@ -26,11 +27,15 @@ func NewConsumer(brokers []string, groupID, topic string) *Consumer {
         MaxBytes:       10 * 1024 * 1024,
         CommitInterval: 0, // управляем коммитом вручную
     })
-    return &Consumer{reader: r}
+    return &Consumer{reader: r, brokers: brokers}
 }
 
 // Start запускает цикл чтения. Идемпотентность обязан обеспечить handler.
 func (c *Consumer) Start(ctx context.Context, handler Handler) error {
+    // Локальный продюсер для DLQ. В реальном коде лучше инжектить.
+    dlqWriter := &kgo.Writer{Addr: kgo.TCP(c.brokers...), AllowAutoTopicCreation: true}
+    defer func() { _ = dlqWriter.Close() }()
+
     for {
         m, err := c.reader.FetchMessage(ctx)
         if err != nil {
@@ -40,15 +45,40 @@ func (c *Consumer) Start(ctx context.Context, handler Handler) error {
             return err
         }
 
-        if err := handler(ctx, m); err != nil {
-            // Не коммитим — сообщение будет переобработано (at-least-once)
-            // Небольшая пауза, чтобы избежать tight loop
-            time.Sleep(200 * time.Millisecond)
+        var ok bool
+        var lastErr error
+        backoff := 100 * time.Millisecond
+        for attempt := 0; attempt < 5; attempt++ {
+            if err := handler(ctx, m); err != nil {
+                lastErr = err
+                time.Sleep(backoff)
+                backoff *= 2
+                continue
+            }
+            ok = true
+            break
+        }
+
+        if ok {
+            if err := c.reader.CommitMessages(ctx, m); err != nil {
+                return err
+            }
             continue
         }
+
+        // Отправляем в DLQ
+        _ = dlqWriter.WriteMessages(ctx, kgo.Message{
+            Topic:   m.Topic + ".dlq",
+            Key:     m.Key,
+            Value:   m.Value,
+            Headers: m.Headers,
+            Time:    time.Now(),
+        })
+        // Коммитим, чтобы не застревать на ядовитом сообщении
         if err := c.reader.CommitMessages(ctx, m); err != nil {
             return err
         }
+        _ = lastErr
     }
 }
 

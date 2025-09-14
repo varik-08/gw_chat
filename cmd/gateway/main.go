@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	kgo "github.com/segmentio/kafka-go"
@@ -31,31 +32,40 @@ func main() {
 		log.Fatalf("jwks: %v", err)
 	}
 
-	// Подписка на evt.message.posted -> fanout (пока логируем)
 	brokers := os.Getenv("KAFKA_BROKERS")
 	if brokers == "" {
 		brokers = "kafka:9092"
 	}
+	prod := mqk.NewProducer([]string{brokers}, "gateway")
 	cons := mqk.NewConsumer([]string{brokers}, "gateway-fanout", "evt.message.posted")
 	go func() {
-		_ = cons.Start(ctx, func(ctx context.Context, _ kgo.Message) error { return nil })
+		_ = cons.Start(ctx, func(ctx context.Context, m kgo.Message) error {
+			// TODO: fanout в подключенных WS клиентов
+			return nil
+		})
 	}()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
-	mux.HandleFunc("/check", func(w http.ResponseWriter, r *http.Request) {
+
+	mux.HandleFunc("/ws/typing", func(w http.ResponseWriter, r *http.Request) {
 		authz := r.Header.Get("Authorization")
 		if authz == "" {
 			http.Error(w, "no auth", http.StatusUnauthorized)
 			return
 		}
 		token := authz[len("Bearer "):]
-		_, err := jwtrs.ValidateRS256(token, jwks)
+		claims, err := jwtrs.ValidateRS256(token, jwks)
 		if err != nil {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		chatID := r.URL.Query().Get("chat_id")
+		isTyping := r.URL.Query().Get("typing") == "1"
+		key := []byte(chatID)
+		value := []byte(`{"msg_type":"evt.chat.typing","chat_id":` + chatID + `,"user_id":` + strconv.FormatInt(claims.UserID, 10) + `,"is_typing":` + strconv.FormatBool(isTyping) + `}`)
+		_ = prod.Publish(r.Context(), "evt.chat.typing", key, value, map[string]string{"msg_type": "evt.chat.typing"})
+		w.WriteHeader(http.StatusAccepted)
 	})
 
 	srv := &http.Server{Addr: ":8080", Handler: mux, ReadHeaderTimeout: 5 * time.Second}

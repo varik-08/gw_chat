@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	authv1 "github.com/varik-08/gw_chat/internal/grpc/gen/authv1"
 	chatv1 "github.com/varik-08/gw_chat/internal/grpc/gen/chatv1"
 	messagev1 "github.com/varik-08/gw_chat/internal/grpc/gen/messagev1"
@@ -145,6 +146,8 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) }).Methods("GET")
+	r.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) }).Methods("GET")
+	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
 
 	r.HandleFunc("/ws/typing", func(w http.ResponseWriter, r *http.Request) {
 		authz := r.Header.Get("Authorization")
@@ -192,16 +195,22 @@ func main() {
 
 	// REST: Auth
 	r.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		var in struct{ Username, Password string }
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil { http.Error(w, "bad json", http.StatusBadRequest); return }
-		resp, err := authCli.Login(r.Context(), &authv1.LoginRequest{Username: in.Username, Password: in.Password})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := authCli.Login(ctxReq, &authv1.LoginRequest{Username: in.Username, Password: in.Password})
 		if err != nil { http.Error(w, err.Error(), http.StatusUnauthorized); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	}).Methods("POST")
 	r.HandleFunc("/api/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		var in struct{ RefreshToken string `json:"refresh_token"` }
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil { http.Error(w, "bad json", http.StatusBadRequest); return }
-		resp, err := authCli.Refresh(r.Context(), &authv1.RefreshRequest{RefreshToken: in.RefreshToken})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := authCli.Refresh(ctxReq, &authv1.RefreshRequest{RefreshToken: in.RefreshToken})
 		if err != nil { http.Error(w, err.Error(), http.StatusUnauthorized); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	}).Methods("POST")
@@ -220,48 +229,63 @@ func main() {
 
 	// REST: Users
 	r.HandleFunc("/api/users", requireJWT(func(w http.ResponseWriter, r *http.Request) {
-		resp, err := userCli.GetUsers(r.Context(), &userv1.GetUsersRequest{})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := userCli.GetUsers(ctxReq, &userv1.GetUsersRequest{})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("GET")
 	r.HandleFunc("/api/users/{id}", requireJWT(func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, _ := strconv.ParseInt(idStr, 10, 64)
-		resp, err := userCli.GetUserByID(r.Context(), &userv1.GetUserByIDRequest{Id: id})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := userCli.GetUserByID(ctxReq, &userv1.GetUserByIDRequest{Id: id})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("GET")
 	r.HandleFunc("/api/users/{id}/password", requireJWT(func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, _ := strconv.ParseInt(idStr, 10, 64)
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		var in struct{ OldPassword, NewPassword string }
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil { http.Error(w, "bad json", http.StatusBadRequest); return }
-		_, err := userCli.UpdatePassword(r.Context(), &userv1.UpdatePasswordRequest{Id: id, OldPassword: in.OldPassword, NewPassword: in.NewPassword})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		_, err := userCli.UpdatePassword(ctxReq, &userv1.UpdatePasswordRequest{Id: id, OldPassword: in.OldPassword, NewPassword: in.NewPassword})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		w.WriteHeader(http.StatusNoContent)
 	})).Methods("POST")
 
 	// REST: Chats
 	r.HandleFunc("/api/chats", requireJWT(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		var in struct{ Title string; IsPublic bool; MemberIds []int64 }
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil { http.Error(w, "bad json", http.StatusBadRequest); return }
-		resp, err := chatCli.CreateChat(r.Context(), &chatv1.CreateChatRequest{Title: in.Title, IsPublic: in.IsPublic, MemberIds: in.MemberIds})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := chatCli.CreateChat(ctxReq, &chatv1.CreateChatRequest{Title: in.Title, IsPublic: in.IsPublic, MemberIds: in.MemberIds})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("POST")
 	r.HandleFunc("/api/chats/{id}/members", requireJWT(func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, _ := strconv.ParseInt(idStr, 10, 64)
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		var in struct{ MemberIds []int64 }
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil { http.Error(w, "bad json", http.StatusBadRequest); return }
-		resp, err := chatCli.AddMembers(r.Context(), &chatv1.AddMembersRequest{ChatId: id, MemberIds: in.MemberIds})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := chatCli.AddMembers(ctxReq, &chatv1.AddMembersRequest{ChatId: id, MemberIds: in.MemberIds})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("POST")
 	r.HandleFunc("/api/users/{id}/chats", requireJWT(func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, _ := strconv.ParseInt(idStr, 10, 64)
-		resp, err := chatCli.GetUserChats(r.Context(), &chatv1.GetUserChatsRequest{UserId: id})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := chatCli.GetUserChats(ctxReq, &chatv1.GetUserChatsRequest{UserId: id})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("GET")
@@ -270,19 +294,31 @@ func main() {
 	r.HandleFunc("/api/chats/{id}/messages", requireJWT(func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, _ := strconv.ParseInt(idStr, 10, 64)
-		resp, err := msgCli.GetMessagesByChatID(r.Context(), &messagev1.GetMessagesByChatIDRequest{ChatId: id})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := msgCli.GetMessagesByChatID(ctxReq, &messagev1.GetMessagesByChatIDRequest{ChatId: id})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("GET")
 	r.HandleFunc("/api/messages", requireJWT(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		var in struct{ ChatId, SenderId int64; Text string }
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil { http.Error(w, "bad json", http.StatusBadRequest); return }
-		resp, err := msgCli.CreateMessage(r.Context(), &messagev1.CreateMessageRequest{ChatId: in.ChatId, SenderId: in.SenderId, Text: in.Text})
+		ctxReq, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		resp, err := msgCli.CreateMessage(ctxReq, &messagev1.CreateMessageRequest{ChatId: in.ChatId, SenderId: in.SenderId, Text: in.Text})
 		if err != nil { http.Error(w, err.Error(), http.StatusBadGateway); return }
 		_ = json.NewEncoder(w).Encode(resp)
 	})).Methods("POST")
 
-	srv := &http.Server{Addr: ":8080", Handler: r, ReadHeaderTimeout: 5 * time.Second}
+	srv := &http.Server{
+		Addr:              ":8080",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
 	log.Printf("gateway http :8080")
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("http: %v", err)
